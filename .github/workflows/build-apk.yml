@@ -14,9 +14,8 @@ jobs:
       - run: npm install --no-audit --no-fund
       - name: Debug
         run: |
-          echo '=== node ==='
+          echo BEGIN
           node --version
-          echo '=== hex ==='
           xxd -l 5 app.json
-          echo '=== config ==='
-          npx --yes expo config --json 2>&1; echo 'EXIT:' $?
+          npx --yes expo config --json 2>&1 && echo SUCCESS || echo FAILED
+          echo DONE

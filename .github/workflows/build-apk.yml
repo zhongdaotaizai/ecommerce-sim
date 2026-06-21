@@ -1,7 +1,7 @@
-锘縩ame: Build APK
+name: Debug
 on: workflow_dispatch
 jobs:
-  build:
+  debug:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -12,14 +12,11 @@ jobs:
         with:
           node-version: 18
       - run: npm install --no-audit --no-fund
-      - run: npm install -g eas-cli
-      - name: Build APK
+      - name: Debug
         run: |
-          npx --yes eas-cli build --platform android --profile preview --non-interactive --wait
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: app
-          path: frontend/*.apk
+          echo '=== node ==='
+          node --version
+          echo '=== hex ==='
+          xxd -l 5 app.json
+          echo '=== config ==='
+          npx --yes expo config --json 2>&1; echo 'EXIT:' $?

@@ -1,10 +1,11 @@
 name: Build APK
+
 on:
   workflow_dispatch:
   push:
     branches: [main, master]
     paths:
-      - 'frontend/**'
+      - frontend/**
 
 jobs:
   build:
@@ -19,7 +20,13 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Build APK with EAS
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+      - name: Configure EAS project  
+        run: npx eas-cli init --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      - name: Build APK
         run: npx eas-cli build --platform android --profile preview --non-interactive --wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

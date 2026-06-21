@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>AI E-Market Sim</title><link rel="manifest" href="/static/manifest.json"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+:root{--primary:#FF6A00;--primary-dark:#E05E00;--danger:#FF3B30;--success:#34C759;--warning:#FF9500;--bg:#f2f2f7;--card:#fff;--text:#1c1c1e;--text2:#8e8e93;--border:#e5e5ea;--radius:12px}
+body{background:var(--bg);color:var(--text);padding-bottom:80px}
+.header{background:linear-gradient(135deg,#FF6A00,#5856D6);color:#fff;padding:16px 16px 12px;position:sticky;top:0;z-index:10}
+.header h1{font-size:20px;font-weight:700}
+.header .stats{display:flex;gap:16px;margin-top:8px;font-size:12px;opacity:.9;flex-wrap:wrap}
+.header .stats span{white-space:nowrap}
+.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:9;overflow-x:auto}
+.tab{flex:1;padding:10px 8px;text-align:center;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;transition:.2s;white-space:nowrap}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.content{max-width:600px;margin:0 auto;padding:12px}
+.card{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.card-title{font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text2)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;color:#fff;user-select:none}
+.btn-primary{background:var(--primary)}
+.btn-success{background:var(--success)}
+.btn-danger{background:var(--danger)}
+.btn-warning{background:var(--warning)}
+.btn:active{transform:scale(.95)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.item:last-child{border-bottom:none}
+.item-icon{width:44px;height:44px;background:#f0f0f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.item-body{flex:1;min-width:0}
+.item-title{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-meta{font-size:12px;color:var(--text2);margin-top:2px}
+.item-price{font-size:15px;font-weight:600;color:var(--danger)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-sale{background:#fce4ec;color:#c62828}
+.badge-green{background:#e8f5e9;color:#2e7d32}
+.badge-orange{background:#fff3e0;color:#e65100}
+.badge-blue{background:#e3f2fd;color:#1565c0}
+.rank-num{font-weight:700;font-size:16px;color:var(--primary);width:24px}
+.event-item{padding:8px 0;border-bottom:1px solid var(--border)}
+.event-name{font-size:13px;font-weight:600;color:var(--warning)}
+.event-desc{font-size:12px;color:var(--text2);margin-top:2px}
+.loading{text-align:center;padding:30px;color:var(--text2)}
+.loading::after{content:"...";animation:dots 1.5s infinite}
+@keyframes dots{0%,20%{content:"."}40%{content:".."}60%,100%{content:"..."}}
+.steps{display:flex;justify-content:space-between;margin:12px 0;padding:0 4px}
+.step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;top:10px;left:60%;width:80%;height:2px;background:#e0e0e0}
+.step.active:not(:last-child)::after{background:var(--primary)}
+.step-dot{width:20px;height:20px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:#fff;z-index:1;color:#999}
+.step.active .step-dot{border-color:var(--primary);background:var(--primary);color:#fff}
+.step.done .step-dot{border-color:#52c41a;background:#52c41a;color:#fff}
+.step-label{font-size:10px;color:#999;margin-top:4px;text-align:center}
+.step.active .step-label{color:var(--primary)}
+.hidden{display:none!important}
+.login-form{padding:40px 16px;max-width:360px;margin:0 auto}
+.login-form input{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;margin-bottom:12px;outline:none}
+.login-form input:focus{border-color:var(--primary)}
+.login-form h2{text-align:center;margin-bottom:24px;font-size:22px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:100;opacity:0;transition:.3s;pointer-events:none}
+#toast.show{opacity:1}
+</style>
+</head><body>
+<div id="toast"></div>
+
+<div id="loginOverlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,#FF6A00,#FF8C00);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <svg width="100" height="100" viewBox="0 0 1024 1024" style="margin-bottom:20px">
+    <rect width="1024" height="1024" rx="200" fill="white" opacity="0.95"/>
+    <g transform="translate(512,480)" fill="#FF6A00"><rect x="-100" y="-50" width="170" height="150" rx="16"/><rect x="-65" y="-25" width="100" height="16" rx="4"/><circle cx="-50" cy="115" r="22"/><circle cx="50" cy="115" r="22"/></g>
+    <path d="M395,370 Q312,310 352,250" stroke="#FF6A00" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <polyline points="360,420 480,300 600,420" stroke="#FF6A00" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <polyline points="460,350 480,300 530,340" stroke="#FF6A00" stroke-width="12" fill="none" stroke-linecap="round"/>
+  </svg>
+  <h2 style="color:#fff;font-size:24px;font-weight:700;margin-bottom:8px">AI智能电商</h2>
+  <p style="color:rgba(255,255,255,.7);font-size:14px;margin-bottom:32px">多智能体市场模拟系统</p>
+  <div style="width:100%;max-width:320px;background:rgba(255,255,255,.15);border-radius:12px;padding:20px">
+    <input id="loginId" type="text" placeholder="用户ID" style="width:100%;padding:14px 16px;border:none;border-radius:8px;font-size:16px;margin-bottom:12px;outline:none;background:rgba(255,255,255,.9)">
+    <input id="loginCode" type="text" placeholder="6位验证码" maxlength="6" style="width:100%;padding:14px 16px;border:none;border-radius:8px;font-size:16px;margin-bottom:16px;outline:none;background:rgba(255,255,255,.9)">
+    <button onclick="handleLogin()" style="width:100%;padding:14px;background:#fff;color:#FF6A00;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer">登 录</button>
+    <p style="text-align:center;margin-top:12px;color:rgba(255,255,255,.6);font-size:13px">没有账号？<span onclick="showRegister()" style="color:#fff;font-weight:600;cursor:pointer">去注册</span></p>
+    <p id="loginError" style="text-align:center;margin-top:8px;color:#ffccc7;font-size:13px;display:none"></p>
+  </div>
+</div>
+
+<div class="header" id="header">
+  <h1>AI E-Market Sim</h1>
+  <div class="stats" id="stats"><span>天数: --</span><span>订单: --</span><span>营收: $--</span><span id="statusBadge" style="font-weight:700">--</span></div>
+</div>
+<div class="tabs" id="tabs">
+  <div class="tab active" data-tab="market">市场</div>
+  <div class="tab" data-tab="products">商品</div>
+  <div class="tab" data-tab="orders">订单</div>
+  <div class="tab" data-tab="ai">AI决策</div>
+  <div class="tab" data-tab="wallet">钱包</div>
+  <div class="tab" data-tab="control">控制</div>
+</div>
+<div class="content" id="content"></div>
+
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/static/sw.js")})}</script><script>
+const API = ''; let TOKEN = localStorage.getItem('token') || '';
+function api(path, opts={}) {
+  const h = {'Content-Type':'application/json'};
+  if(TOKEN) h['Authorization'] = 'Bearer '+TOKEN;
+  return fetch(API+'/api'+path, {...opts, headers:{...h,...opts.headers}}).then(r=>r.json()).catch(e=>({error:e.message}));
+}
+
+async function handleLogin(){
+  var id = document.getElementById('loginId').value;
+  var code = document.getElementById('loginCode').value;
+  var err = document.getElementById('loginError');
+  if(!id||!code){err.textContent='请输入用户ID和验证码';err.style.display='block';return}
+  try{
+    var r = await api('/auth/login-code',{method:'POST',body:JSON.stringify({user_id:id,code:code})});
+    if(r.access_token){
+      TOKEN=r.access_token;localStorage.setItem('token',r.access_token);
+      document.getElementById('loginOverlay').style.display='none';
+      document.getElementById('loginError').style.display='none';
+      updateHeader();renderTab('market');
+    }
+  }catch(e){
+    var msg = '登录失败';
+    if(e.response&&e.response.data&&e.response.data.detail) msg = e.response.data.detail;
+    err.textContent=msg;err.style.display='block';
+  }
+}
+function showRegister(){
+  document.getElementById('loginOverlay').style.display='none';
+  var c=document.getElementById('content');
+  c.innerHTML='<div class="login-form"><h2>注册账号</h2><input id="regUser" placeholder="用户名" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;outline:none"><input id="regPass" type="password" placeholder="密码" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;outline:none"><input id="regNick" placeholder="昵称" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:15px;margin-bottom:12px;outline:none"><button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="doRegister()">注册</button><p style="text-align:center;margin-top:12px;color:var(--text2);font-size:13px">已有账号？<span onclick="location.reload()" style="color:var(--primary);cursor:pointer">去登录</span></p></div>';
+}
+async function doRegister(){
+  var u=document.getElementById('regUser').value;
+  var p=document.getElementById('regPass').value;
+  var n=document.getElementById('regNick').value;
+  if(!u||!p){toast('请填写用户名和密码');return}
+  try{
+    var resp=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,nickname:n||u})});
+    var r=await resp.json();
+    if(r.access_token){TOKEN=r.access_token;localStorage.setItem('token',r.access_token);location.reload()}
+    else{toast(r.detail||'注册失败')}
+  }catch(e){toast('注册失败: '+e.message)}
+}
+if(TOKEN){document.getElementById('loginOverlay').style.display='none'}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+function $(id){return document.getElementById(id)}
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    renderTab(t.dataset.tab);
+  }
+});
+
+async function renderTab(name){
+  const c=$('content');
+  c.innerHTML='<div class="loading">Loading</div>';
+  try{
+    if(name==='market') await renderMarket(c);
+    else if(name==='products') await renderProducts(c);
+    else if(name==='orders') await renderOrders(c);
+    else if(name==='ai') await renderAI(c);
+    else if(name==='wallet') await renderWallet(c);
+    else if(name==='control') await renderControl(c);
+  }catch(e){c.innerHTML='<div class="card">Error: '+e.message+'</div>'}
+}
+
+async function updateHeader(){
+  const s = await api('/simulate/status');
+  $('stats').innerHTML = '<span>天数: '+(s.current_day||0)+'</span><span>订单: '+(s.total_orders||0)+'</span><span>营收: ¥'+(s.total_revenue?(s.total_revenue).toFixed(0):'0')+'</span><span id="statusBadge" style="font-weight:700;color:'+(s.is_running?'#FF9500':'#34C759')+'">'+(s.is_running?'RUNNING':'IDLE')+'</span>';
+}
+setInterval(updateHeader,3000);
+
+// === MARKET ===
+async function renderMarket(c){
+  const ov = await api('/market/overview');
+  const st = await api('/simulate/status');
+  let html='<div class="card"><div class="card-title">市场概览 - Day '+st.current_day+'</div>';
+  if(ov.events&&ov.events.length){
+    html+='<div style="font-size:12px;font-weight:600;color:var(--warning);margin-bottom:6px">活跃事件:</div>';
+    ov.events.forEach(e=>{html+='<div class="event-item"><div class="event-name">'+e.name+'</div><div class="event-desc">'+e.description+'</div></div>'});
+  }
+  html+='</div>';
+  const types=[['top_sales','热销榜','badge-sale'],['top_gain','涨幅榜','badge-green'],['top_loss','跌幅榜','badge-orange']];
+  types.forEach(([key,label,cls])=>{
+    const items=ov[key]||[];
+    if(!items.length)return;
+    html+='<div class="card"><div class="card-title"><span class="badge '+cls+'" style="margin-right:6px">TOP</span>'+label+'</div>';
+    items.forEach(i=>{
+      html+='<div class="item"><div class="rank-num">#'+i.rank+'</div><div class="item-body"><div class="item-title">'+i.product_title+'</div><div class="item-meta">'+i.value.toFixed(1)+'</div></div></div>';
+    });
+    html+='</div>';
+  });
+  c.innerHTML=html;
+}
+
+// === PRODUCTS ===
+async function renderProducts(c){
+  const cats = await api('/products/categories?level=1');
+  const prods = await api('/products?page_size=20');
+  let html='<div class="card"><div class="card-title">商品类目</div><div style="display:flex;flex-wrap:wrap;gap:4px">';
+  (cats||[]).forEach(c=>{html+='<span class="badge badge-blue" style="cursor:pointer;font-size:12px;padding:4px 10px">'+c.name+'</span>'});
+  html+='</div></div>';
+  html+='<div class="card"><div class="card-title">热销商品 ('+(prods.total||0)+')</div>';
+  (prods.items||[]).forEach(p=>{
+    html+='<div class="item"><div class="item-icon">📦</div><div class="item-body"><div class="item-title">'+p.title+'</div><div class="item-meta">'+p.shop_name+' &middot; 销量: '+p.total_sales+' &middot; 评分: '+(p.avg_rating?p.avg_rating.toFixed(1):'N/A')+'</div><div class="item-price">$'+p.base_price.toFixed(2)+'</div></div></div>';
+  });
+  html+='</div>';
+  c.innerHTML=html;
+}
+
+// === ORDERS ===
+async function renderOrders(c){
+  const ords = await api('/orders');
+  let html='<div class="card"><div class="card-title">我的订单</div>';
+  if(!ords||!ords.length){html+='<div style="text-align:center;padding:20px;color:var(--text2)">暂无订单。虚拟买家 are creating orders via simulation.</div></div>';c.innerHTML=html;return}
+  ords.forEach(o=>{
+    const statusColor={pending:'#FF9500',paid:'#34C759',received:'#FF6A00',refunding:'#FF3B30',refunded:'#8e8e93'};
+    html+='<div style="padding:10px 0;border-bottom:1px solid var(--border)">';
+    html+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--text2)">#'+o.order_no+'</span><span style="font-size:12px;font-weight:600;color:'+(statusColor[o.status]||'#666')+'">'+o.status+'</span></div>';
+    (o.items||[]).forEach(i=>{html+='<div style="font-size:13px;display:flex;justify-content:space-between"><span>'+i.product_title+' x'+i.quantity+'</span><span style="font-weight:500">$'+i.subtotal.toFixed(2)+'</span></div>'});
+    html+='<div style="text-align:right;font-weight:700;font-size:15px;margin-top:4px">合计: ¥'+o.total_amount.toFixed(2)+'</div>';
+    if(o.status==='pending')html+='<button class="btn btn-success" style="margin-top:6px;padding:6px 14px;font-size:12px" onclick="payOrder('+o.id+')">立即支付</button>';
+    html+='</div>';
+  });
+  html+='</div>';
+  c.innerHTML=html;
+}
+async function payOrder(id){const r=await api('/orders/'+id+'/pay',{method:'POST'});toast(r.status==='paid'?'支付成功！':'支付失败: '+r.pay_fail_reason);renderTab('orders')}
+
+// === AI Decisions ===
+async function renderAI(c){
+  const users = await api('/market/users/virtual');
+  let html='<div class="card"><div class="card-title">虚拟买家 - AI决策浏览器</div><div style="font-size:12px;color:var(--text2);margin-bottom:8px">点击买家查看AI决策解释</div>';
+  if(!users||!users.length){html+='<div style="padding:20px;text-align:center;color:var(--text2)">请先运行初始化</div></div>';c.innerHTML=html;return}
+  (users||[]).slice(0,20).forEach(u=>{
+    const prefs=u.preferences||{};
+    html+='<div class="item" style="cursor:pointer" onclick="showDecision('+u.id+')"><div class="item-icon">🤖</div><div class="item-body"><div class="item-title">'+u.username+' ('+(prefs.type||'unknown')+')</div><div class="item-meta">余额: ¥'+(u.balance||0).toFixed(0)+' &middot; Price: '+(prefs.price_weight||'N/A')+' &middot; Quality: '+(prefs.quality_weight||'N/A')+'</div></div><div style="font-size:12px;color:var(--primary)">查看 &gt;</div></div>';
+  });
+  html+='</div>';
+  c.innerHTML=html;
+}
+async function showDecision(id){
+  const d=await api('/market/user/'+id+'/decision');
+  if(d.error||!d.predicted_prob){toast('No decision data for this buyer yet');return}
+  const prefs=d.buyer_tags||{};
+  let html='<div class="card"><div class="card-title">AI决策 - 买家 #'+id+'</div>';
+  html+='<div style="margin-bottom:8px"><strong>买家类型:</strong> '+(prefs.type||'N/A')+'</div>';
+  html+='<div style="margin-bottom:8px"><strong>偏好:</strong> 价格权重='+(prefs.price_weight||0)+', 品质权重='+(prefs.quality_weight||0)+'</div>';
+  html+='<div style="margin-bottom:8px"><strong>Product:</strong> '+d.product_title+'</div>';
+  html+='<div style="background:#f0f0f5;border-radius:8px;padding:12px;margin:8px 0">';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>预测概率</span><span style="font-weight:700;color:'+(d.predicted_prob>=d.threshold?'var(--success)':'var(--danger)')+'">'+(d.predicted_prob*100).toFixed(1)+'%</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>阈值</span><span>'+(d.threshold*100).toFixed(0)+'%</span></div>';
+  html+='<div style="display:flex;justify-content:space-between"><span>决策</span><span style="font-weight:700;color:'+(d.decision==='buy'?'var(--success)':'var(--text2)')+'">'+d.decision.toUpperCase()+'</span></div>';
+  html+='</div>';
+  html+='<div style="font-size:12px;color:var(--text2)"><strong>原因:</strong> '+d.decision_reason+'</div>';
+  if(d.features){
+    html+='<div style="margin-top:8px"><strong>特征快照:</strong></div><div style="font-size:11px;color:var(--text2);background:#f9f9f9;border-radius:6px;padding:8px;max-height:150px;overflow-y:auto">';
+    Object.entries(d.features).slice(0,15).forEach(([k,v])=>{html+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>'+k+'</span><span>'+(typeof v==='number'?v.toFixed(3):v)+'</span></div>'});
+    html+='</div>';
+  }
+  html+='<button class="btn btn-primary" style="margin-top:10px;padding:8px 16px;font-size:12px" onclick="renderTab('ai')">返回</button></div>';
+  $('content').innerHTML=html;
+}
+
+// === CONTROL ===
+
+async function renderWallet(c){
+  const w = await api('/wallet/balance');
+  let html='<div class="card"><div class="card-title">我的钱包</div>';
+  html+='<div style="text-align:center;padding:16px"><div style="font-size:36px;font-weight:700;color:var(--primary)">'+'¥'+(w.balance||0).toFixed(2)+'</div><div style="font-size:13px;color:var(--text2);margin-top:4px">可用余额</div></div>';
+  html+='<div style="display:flex;justify-content:space-around;margin-bottom:12px"><div style="text-align:center"><div style="font-size:20px;font-weight:700;color:#52c41a">'+'¥'+(w.total_income||0).toFixed(0)+'</div><div style="font-size:11px;color:var(--text2)">累计收入</div></div><div style="text-align:center"><div style="font-size:20px;font-weight:700;color:#ff4d4f">'+'¥'+(w.total_expense||0).toFixed(0)+'</div><div style="font-size:11px;color:var(--text2)">累计支出</div></div></div>';
+  if(w.transactions&&w.transactions.length){
+    html+='<div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px"><div style="font-size:13px;font-weight:600;margin-bottom:8px">最近20条资金流水</div>';
+    w.transactions.forEach(function(t){
+      var color=t.type==='income'?'#52c41a':t.type==='refund'?'#faad14':'#ff4d4f';
+      var prefix=t.type==='income'?'+':'-';
+      html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px"><div><div style="font-weight:500">'+t.description+'</div><div style="color:var(--text2);font-size:11px">'+((t.created_at||'').substring(0,16))+'</div></div><div style="font-weight:600;color:'+color+'">'+prefix+t.amount.toFixed(2)+'</div></div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  c.innerHTML=html;
+}
+
+async function renderControl(c){
+  const st = await api('/simulate/status');
+  let html='';
+  html+='<div style="display:flex;justify-content:space-around;margin-bottom:12px;padding:8px;background:#f0f0f5;border-radius:8px"><div style="text-align:center"><div style="font-size:24px;font-weight:700;color:var(--primary)">'+(st.current_day||0)+'</div><div style="font-size:11px;color:var(--text2)">当前天数</div></div><div style="text-align:center"><div style="font-size:24px;font-weight:700;color:var(--success)">'+(st.total_orders||0)+'</div><div style="font-size:11px;color:var(--text2)">总订单数</div></div><div style="text-align:center"><div style="font-size:24px;font-weight:700;color:var(--danger)">¥'+(st.total_revenue?(st.total_revenue).toFixed(0):'0')+'</div><div style="font-size:11px;color:var(--text2)">总营收</div></div></div>';
+  html+='<div class="btn-group">';
+  html+='<button class="btn btn-primary" onclick="triggerDay()"'+(st.is_running?' disabled':'')+'>▶ 模拟一天</button>';
+  html+='<button class="btn btn-success" onclick="initSystem()">⚡ 初始化</button>';
+  html+='<button class="btn btn-warning" onclick="resetSystem()">↺ 重置</button>';
+  html+='</div></div>';
+  html+='<div class="card"><div class="card-title">快速链接</div>';
+  html+='<div style="font-size:13px;margin-bottom:4px"><a href="'+API+'/docs" target="_blank" style="color:var(--primary)">🔗 API Documentation (Swagger)</a></div>';
+  html+='<div style="font-size:13px;margin-bottom:4px"><a href="'+API+'/api/health" target="_blank" style="color:var(--primary)">🔗 health Check</a></div>';
+  html+='<div style="font-size:13px;color:var(--text2);margin-top:8px">end: FastAPI + SQLite (local) | '+(st.current_day||0)+' 天模拟 | '+(st.total_orders||0)+' 总订单数</div>';
+  html+='</div>';
+  c.innerHTML=html;
+}
+async function triggerDay(){
+  const btn=document.querySelector('.btn-primary');
+  btn.disabled=true;btn.textContent='⏳ Simulating...';
+  const r=await api('/simulate/day',{method:'POST'});
+  toast('Day '+r.day+': '+r.orders_created+' 笔订单, $'+r.revenue_generated.toFixed(2)+' 总营收');
+  btn.disabled=false;btn.textContent='▶ 模拟一天';
+  updateHeader();renderTab('control');
+}
+async function initSystem(){
+  toast('正在初始化系统...');
+  const r=await api('/simulate/init',{method:'POST'});
+  toast(r.message||'系统初始化完成');
+  updateHeader();renderTab('control');
+}
+async function resetSystem(){
+  const r=await api('/simulate/reset',{method:'POST'});
+  toast('系统已重置');
+  updateHeader();renderTab('control');
+}
+
+// START
+updateHeader();renderTab('market');
+</script></body></html>
+
+
+
+

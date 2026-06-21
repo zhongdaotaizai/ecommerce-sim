@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "E-Market Sim",
+    "slug": "ecommerce-sim",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    " s p l a s h " :   {   " i m a g e " :   " . / a s s e t s / i c o n . p n g " ,   " r e s i z e M o d e " :   " c o n t a i n " ,   " b a c k g r o u n d C o l: { "backgroundColor": "#FF6A00" },
+    "ios": { "supportsTablet": true, "bundleIdentifier": "com.ecomsim.app" },
+    "android": {
+      "adaptiveIcon": { "backgroundColor": "#FF6A00" },
+      "package": "com.ecomsim.app"
+    },
+    "web": { "favicon": "./assets/favicon.png" }
+  }
+}
+
+

@@ -11,11 +11,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - name: Remove BOM
-        run: sed -i '1s/^\xEF\xBB\xBF//' *.json 2>/dev/null || true
+      - run: sed -i '1s/^\xEF\xBB\xBF//' *.json 2>/dev/null; echo done
       - run: npm install --no-audit --no-fund
       - run: npm install -g eas-cli
-      - name: Build
+      - name: Init EAS
+        run: npx --yes eas-cli init --non-interactive --force 2>&1 || true
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      - name: Build APK
         run: npx --yes eas-cli build --platform android --profile preview --non-interactive --wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

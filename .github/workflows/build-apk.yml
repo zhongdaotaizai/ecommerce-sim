@@ -11,9 +11,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+      - name: Remove BOM
+        run: sed -i '1s/^\xEF\xBB\xBF//' *.json 2>/dev/null || true
       - run: npm install --no-audit --no-fund
       - run: npm install -g eas-cli
-      - name: Build APK
+      - name: Build
         run: npx --yes eas-cli build --platform android --profile preview --non-interactive --wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -22,4 +24,3 @@ jobs:
         with:
           name: ecommerce-sim-apk
           path: frontend/*.apk
-

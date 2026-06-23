@@ -11,8 +11,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - name: Fix BOM
-        run: python3 -c "import glob; [__import__('os').rename(f,f) or open(f,'wb').write(open(f,'rb').read().lstrip(b'\xef\xbb\xbf')) for f in glob.glob('*.json')]"
       - run: npm install --no-audit --no-fund
       - run: npm install -g eas-cli
       - name: Init EAS

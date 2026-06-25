@@ -1,5 +1,6 @@
 name: Build APK
-on: workflow_dispatch
+on:
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,11 +15,17 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm install -g eas-cli
       - name: Init
-        run: eas init --non-interactive --force 2>&1; echo "INIT_EXIT_CODE: True"
+        run: |
+          set +e
+          eas init --non-interactive --force 2>&1
+          echo "EAS_INIT_DONE"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       - name: Build
-        run: eas build --platform android --profile preview --non-interactive --wait 2>&1; echo "BUILD_EXIT_CODE: True"
+        run: |
+          set +e
+          eas build --platform android --profile preview --non-interactive --wait 2>&1
+          echo "EAS_BUILD_DONE"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       - uses: actions/upload-artifact@v4

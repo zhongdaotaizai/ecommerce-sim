@@ -13,12 +13,12 @@ jobs:
           node-version: 18
       - run: npm install --no-audit --no-fund
       - run: npm install -g eas-cli
-      - name: Init EAS
-        run: npx --yes eas-cli init --non-interactive --force 2>&1 || true
+      - name: Init
+        run: eas init --non-interactive --force 2>&1; echo "INIT_EXIT_CODE: True"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-      - name: Build APK
-        run: npx --yes eas-cli build --platform android --profile preview --non-interactive --wait
+      - name: Build
+        run: eas build --platform android --profile preview --non-interactive --wait 2>&1; echo "BUILD_EXIT_CODE: True"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       - uses: actions/upload-artifact@v4

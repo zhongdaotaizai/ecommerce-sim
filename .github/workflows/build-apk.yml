@@ -13,14 +13,24 @@ jobs:
         with:
           node-version: 18
       - run: npm install --no-audit --no-fund
+
       - name: Generate Android project
         run: npx expo prebuild --platform android --non-interactive --no-install 2>&1
+
+      - name: Patch AGP compatibility
+        run: |
+          # Add publishing block to app build.gradle
+          sed -i '/^android {/a\    publishing {\n        singleVariant("release")\n    }' android/app/build.gradle 2>/dev/null || true
+          echo "Patch applied"
+          head -20 android/app/build.gradle
+
       - name: Build APK
         working-directory: frontend/android
         run: |
           export ANDROID_HOME=/usr/local/lib/android/sdk
           chmod +x gradlew
           ./gradlew assembleDebug 2>&1
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:

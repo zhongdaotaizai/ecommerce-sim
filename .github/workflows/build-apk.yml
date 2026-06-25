@@ -13,23 +13,16 @@ jobs:
         with:
           node-version: 18
       - run: npm install --no-audit --no-fund
-      - run: npm install -g eas-cli
-      - name: Init
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --non-interactive --no-install 2>&1
+      - name: Build APK
+        working-directory: frontend/android
         run: |
-          set +e
-          eas init --non-interactive --force 2>&1
-          echo "EAS_INIT_DONE"
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-      - name: Build
-        run: |
-          set +e
-          eas build --platform android --profile preview --non-interactive --wait 2>&1
-          echo "EAS_BUILD_DONE"
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          chmod +x gradlew
+          ./gradlew assembleDebug 2>&1
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ecommerce-sim-apk
-          path: frontend/*.apk
+          path: frontend/android/app/build/outputs/apk/debug/*.apk

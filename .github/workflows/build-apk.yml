@@ -17,12 +17,11 @@ jobs:
       - name: Generate Android project
         run: npx expo prebuild --platform android --non-interactive --no-install 2>&1
 
-      - name: Patch AGP compatibility
+      - name: Fix AGP version
         run: |
-          # Add publishing block to app build.gradle
-          sed -i '/^android {/a\    publishing {\n        singleVariant("release")\n    }' android/app/build.gradle 2>/dev/null || true
-          echo "Patch applied"
-          head -20 android/app/build.gradle
+          sed -i 's/com.android.tools.build:gradle:[0-9.]*"/com.android.tools.build:gradle:8.1.4"/g' android/build.gradle
+          echo "AGP version fixed to 8.1.4"
+          grep "com.android.tools" android/build.gradle
 
       - name: Build APK
         working-directory: frontend/android

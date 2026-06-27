@@ -12,23 +12,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-
-      - name: Set up Java 17
-        run: |
-          echo "JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64" >> $env:GITHUB_ENV
-          echo 'JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64' >> 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
 
       - run: npm install --no-audit --no-fund
 
       - name: Generate Android project
         run: npx expo prebuild --platform android --non-interactive --no-install 2>&1
 
-      - name: Fix AGP & plugin
-        run: |
-          sed -i 's/com.android.tools.build:gradle:[0-9.]*"/com.android.tools.build:gradle:8.1.4"/g' android/build.gradle
-          sed -i 's/com.android.internal.application/com.android.application/g' app/build.gradle
-          echo "Patches done"
-          head -3 app/build.gradle
+      - name: Fix AGP version
+        run: sed -i 's/com.android.tools.build:gradle:[0-9.]*"/com.android.tools.build:gradle:8.1.4"/g' android/build.gradle
+
+      - name: Fix plugin ref
+        run: sed -i 's/com.android.internal.application/com.android.application/g' app/build.gradle
 
       - name: Build APK
         working-directory: frontend/android

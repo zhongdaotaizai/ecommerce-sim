@@ -1,6 +1,8 @@
 name: Build APK
 on:
   workflow_dispatch:
+  push:
+    branches: [master]
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -22,10 +24,10 @@ jobs:
       - name: Generate Android project
         run: npx expo prebuild --platform android --non-interactive --no-install 2>&1
 
-      - name: Fix AGP version
+      - name: Fix AGP
         run: sed -i 's/com.android.tools.build:gradle:[0-9.]*"/com.android.tools.build:gradle:8.1.4"/g' android/build.gradle
 
-      - name: Fix plugin ref
+      - name: Fix plugin
         run: sed -i 's/com.android.internal.application/com.android.application/g' app/build.gradle
 
       - name: Build APK

@@ -17,11 +17,15 @@ jobs:
       - name: Generate Android project
         run: npx expo prebuild --platform android --non-interactive --no-install 2>&1
 
-      - name: Fix AGP version
+      - name: Fix compatibility
         run: |
+          # Fix AGP version
           sed -i 's/com.android.tools.build:gradle:[0-9.]*"/com.android.tools.build:gradle:8.1.4"/g' android/build.gradle
-          echo "AGP version fixed to 8.1.4"
-          grep "com.android.tools" android/build.gradle
+          # Fix internal application plugin
+          sed -i 's/com.android.internal.application/com.android.application/g' android/app/build.gradle
+          echo "Patches applied"
+          grep -E "com.android|gradle" android/build.gradle | head -5
+          grep "com.android" android/app/build.gradle | head -3
 
       - name: Build APK
         working-directory: frontend/android
